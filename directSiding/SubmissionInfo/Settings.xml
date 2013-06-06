@@ -1,9 +1,6 @@
 <MarketplaceDetails>
-  <SmallAppTile>
-  </SmallAppTile>
-  <LargeAppTile>
-  </LargeAppTile>
-  <PCAppTile>
-  </PCAppTile>
-  <ScreenShots>;;;;;;;;</ScreenShots>
+  <SmallAppTile>icon_99.png</SmallAppTile>
+  <LargeAppTile>icon_173.png</LargeAppTile>
+  <PCAppTile>icon_200.png</PCAppTile>
+  <ScreenShots>0.png;1.png;2.png;3.png;4.png;;;;</ScreenShots>
 </MarketplaceDetails>

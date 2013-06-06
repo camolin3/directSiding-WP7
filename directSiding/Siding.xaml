@@ -10,7 +10,7 @@
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait" Orientation="Portrait"
-    mc:Ignorable="d" d:DesignHeight="728" d:DesignWidth="480"
+    mc:Ignorable="d" d:DesignHeight="696" d:DesignWidth="480"
     shell:SystemTray.IsVisible="True" BackKeyPress="PhoneApplicationPage_BackKeyPress" Loaded="PhoneApplicationPage_Loaded">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
@@ -26,14 +26,17 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+
             <Image Grid.Column="0" Source="/directSiding;component/Images/icon_24.png" Width="24" Height="24" HorizontalAlignment="Left" />
             <TextBlock Grid.Column="1" x:Name="ApplicationTitle" Text="DIRECTSIDING" Style="{StaticResource PhoneTextNormalStyle}"/>
             <!--<TextBlock x:Name="PageTitle" Text="inicio" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>-->
         </Grid>
 
+        <ProgressBar Grid.Row="0" Name="progressBar" Visibility="Collapsed" IsIndeterminate="True" Margin="0,-48,0,0" />
+
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-            <phone:WebBrowser Name="browser" Navigated="browser_Navigated_1" NavigationFailed="browser_NavigationFailed" />
+            <phone:WebBrowser Name="browser" Navigated="browser_Navigated" NavigationFailed="browser_NavigationFailed" Navigating="browser_Navigating" />
         </Grid>
     </Grid>
  

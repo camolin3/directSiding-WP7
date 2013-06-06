@@ -16,8 +16,15 @@ namespace directSiding
 {
     public partial class Siding : PhoneApplicationPage
     {
+        Uri UriLogin = new Uri("https://intrawww.ing.puc.cl/siding/index.phtml", UriKind.Absolute);
+        Uri UriCursos = new Uri("https://intrawww.ing.puc.cl/siding/dirdes/ingcursos/cursos/vista.phtml", UriKind.Absolute);
+
+        // Determines how many times you can go back in browser history
         int _browserHistoryLenght;
+        // The current request is going back in browser history
         bool _goingBack;
+        // The Uri that is trying to load
+        Uri _uriToLoad;
 
         public Siding()
         {
@@ -27,7 +34,6 @@ namespace directSiding
             _browserHistoryLenght = -1;
             _goingBack = false;
 
-            string url = "https://intrawww.ing.puc.cl/siding/index.phtml";
             System.Text.Encoding a = System.Text.Encoding.GetEncoding("iso-8859-1");
             string postData = "login="+ (Application.Current as App).settings["username"]+"&passwd="+ (Application.Current as App).settings["password"]+"&sw=&sh=&cd=";
             string headers = "Content-Type: application/x-www-form-urlencoded\r\n"+
@@ -36,7 +42,7 @@ namespace directSiding
                 "Accept-Language: es-cl,es;q=0.8,en-us;q=0.5,en;q=0.3\r\n"+
                 "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
             browser.Navigated += new EventHandler<System.Windows.Navigation.NavigationEventArgs>(browser_firstTime);
-            browser.Navigate(new Uri(url, UriKind.Absolute), a.GetBytes(postData), headers);
+            browser.Navigate(UriLogin, a.GetBytes(postData), headers);
         }
 
         void browser_firstTime(object sender, System.Windows.Navigation.NavigationEventArgs e)
@@ -44,14 +50,14 @@ namespace directSiding
             browser.Navigated -= browser_firstTime;
             if ((bool)(Application.Current as App).settings["redirect"])
             {
-                browser.Navigate(new Uri("https://intrawww.ing.puc.cl/siding/dirdes/ingcursos/cursos/vista.phtml", UriKind.Absolute));
+                browser.Navigate(UriCursos);
                 _browserHistoryLenght--;
             }
         }
 
         private void btnUpdate_Click(object sender, EventArgs e)
         {
-            browser.Navigate(new Uri(browser.Source.AbsoluteUri, UriKind.Absolute));
+            browser.Navigate(_uriToLoad);
             _browserHistoryLenght--;
         }
 
@@ -71,12 +77,11 @@ namespace directSiding
             }
         }
 
-        private void browser_Navigated_1(object sender, System.Windows.Navigation.NavigationEventArgs e)
+        private void browser_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
         {
             if(!_goingBack)
                 _browserHistoryLenght++;
             ThreadPool.QueueUserWorkItem(updateTitle);
-            
         }
 
         private void PhoneApplicationPage_Loaded(object sender, RoutedEventArgs e)
@@ -86,8 +91,10 @@ namespace directSiding
 
         private void browser_NavigationFailed(object sender, System.Windows.Navigation.NavigationFailedEventArgs e)
         {
-            MessageBox.Show("Algo salió mal.\r\nRevisa que tengas conexión a Internet o vuelve a intentar más tarde.", "Ups!", MessageBoxButton.OK);
-            throw new Exception();
+            var message = "Algo salió mal.\r\nRevisa que tengas conexión a Internet.\r\n";
+            if (e.Exception != null)
+                message += e.Exception.StackTrace;
+            MessageBox.Show(message, "¡Ups!", MessageBoxButton.OK);
         }
 
         private void updateTitle(Object o)
@@ -99,12 +106,19 @@ namespace directSiding
                 {
                     string title = (string)browser.InvokeScript("eval", "document.querySelector('html body table tbody tr td.ColorFondoZonaTrabajo table tbody tr td table tbody tr td.ColorFondoResaltado b').innerHTML");
                     ApplicationTitle.Text = "DIRECTSIDING - " + title;
+                    progressBar.Visibility = System.Windows.Visibility.Collapsed;
                 }
                 catch (SystemException)
                 {
                     ThreadPool.QueueUserWorkItem(updateTitle);
                 }
             });
+        }
+
+        private void browser_Navigating(object sender, NavigatingEventArgs e)
+        {
+            progressBar.Visibility = System.Windows.Visibility.Visible;
+            _uriToLoad = e.Uri;
         }
     }
 }

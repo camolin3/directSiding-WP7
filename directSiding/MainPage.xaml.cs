@@ -11,6 +11,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using System.IO.IsolatedStorage;
+using System.Reflection;
 
 namespace directSiding
 {
@@ -41,13 +42,34 @@ namespace directSiding
 
         private void btn_Click(object sender, RoutedEventArgs e)
         {
-            // Save user config
+            // Fix the case that the user wrote an email instead of the username
+            if (txtUsername.Text.Contains('@'))
+                txtUsername.Text = txtUsername.Text.Split('@')[0];
 
+            // Save user config
             settings["username"] = txtUsername.Text;
             settings["password"] = pswPassword.Password;
             settings["redirect"] = cbCursos.IsChecked;
 
             NavigationService.Navigate(new Uri("/Siding.xaml", UriKind.Relative));
+        }
+
+        private void lnkEgg_Click(object sender, RoutedEventArgs e)
+        {
+            var nameHelper = new AssemblyName(Assembly.GetExecutingAssembly().FullName);
+
+            var name = nameHelper.Name + " v" + nameHelper.Version.ToString();
+            var content = "Ninguna de las contraseñas es guardada, robada ni nada de esas cosas, trust me. \r\nY si no confías, siempre puedes consultar el código fuente, es Open Source ;)";
+            
+            var result = System.Windows.MessageBox.Show(content, name, MessageBoxButton.OKCancel);
+            if (result == MessageBoxResult.OK)
+            {
+                settings["clippy-js"] = "Link";
+            }
+            else if (result == MessageBoxResult.Cancel)
+            {
+                settings["clippy-js"] = "Clippy";
+            }
         }
     }
 }

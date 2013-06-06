@@ -27,8 +27,8 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Image Grid.Column="0" Source="/directSiding;component/Images/icon_16.png" Width="24" Height="24" HorizontalAlignment="Left"></Image>
-                <TextBlock Grid.Column="1" x:Name="ApplicationTitle" Text="DIRECTSIDING" Style="{StaticResource PhoneTextNormalStyle}"/>
+                <Image Grid.Column="0" Source="/directSiding;component/Images/icon_24.png" />
+                <TextBlock Grid.Column="1" x:Name="ApplicationTitle" Text="DIRECTSIDING" Style="{StaticResource PhoneTextNormalStyle}" />
             </Grid>
             <TextBlock x:Name="PageTitle" Text="login" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>
         </StackPanel>
@@ -43,8 +43,12 @@
             <Button Name="btnLogin" 
                     Content="Entrar"
                     Click="btn_Click" Height="100" />
-            <TextBlock Text="Por Carlos Molina (camolin3@uc.cl)" Margin="0, 150, 0, 0" HorizontalAlignment="Center" Foreground="Gray" />
-            
+            <HyperlinkButton Name="lnkEgg" 
+                             Content="Por Carlos Molina (camolin3@uc.cl)" 
+                             Margin="0, 150, 0, 0" 
+                             HorizontalAlignment="Center" 
+                             Foreground="Gray"
+                             Click="lnkEgg_Click"/>
         </StackPanel>
     </Grid>
 
