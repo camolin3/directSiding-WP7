@@ -11,6 +11,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using System.Threading;
+using Microsoft.Phone.Shell;
 
 namespace directSiding
 {
@@ -25,6 +26,8 @@ namespace directSiding
         bool _goingBack;
         // The Uri that is trying to load
         Uri _uriToLoad;
+        // The browser is navigating
+        bool _navigating;
 
         public Siding()
         {
@@ -33,6 +36,7 @@ namespace directSiding
             browser.IsScriptEnabled = true;
             _browserHistoryLenght = -1;
             _goingBack = false;
+            _navigating = false;
 
             System.Text.Encoding a = System.Text.Encoding.GetEncoding("iso-8859-1");
             string postData = "login="+ (Application.Current as App).settings["username"]+"&passwd="+ (Application.Current as App).settings["password"]+"&sw=&sh=&cd=";
@@ -57,8 +61,19 @@ namespace directSiding
 
         private void btnUpdate_Click(object sender, EventArgs e)
         {
-            browser.Navigate(_uriToLoad);
-            _browserHistoryLenght--;
+            if (_navigating)
+            {
+                // Cancel navigation
+                browser.InvokeScript("eval", "document.execCommand('Stop');");
+                // Restore update btn
+                ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.refresh.rest.png", UriKind.Relative);
+            }
+            else
+            {
+                // Reload the Uri
+                browser.Navigate(_uriToLoad);
+                _browserHistoryLenght--;
+            }
         }
 
         private void btnConfig_Click(object sender, EventArgs e)
@@ -106,7 +121,10 @@ namespace directSiding
                 {
                     string title = (string)browser.InvokeScript("eval", "document.querySelector('html body table tbody tr td.ColorFondoZonaTrabajo table tbody tr td table tbody tr td.ColorFondoResaltado b').innerHTML");
                     ApplicationTitle.Text = "DIRECTSIDING - " + title;
+                    _navigating = false;
                     progressBar.Visibility = System.Windows.Visibility.Collapsed;
+                    ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.refresh.rest.png", UriKind.Relative);
+                    //ApplicationBar.Mode = ApplicationBarMode.Minimized;
                 }
                 catch (SystemException)
                 {
@@ -118,6 +136,9 @@ namespace directSiding
         private void browser_Navigating(object sender, NavigatingEventArgs e)
         {
             progressBar.Visibility = System.Windows.Visibility.Visible;
+            ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.cancel.rest.png", UriKind.Relative);
+            //ApplicationBar.Mode = ApplicationBarMode.Default;
+            _navigating = true;
             _uriToLoad = e.Uri;
         }
     }
