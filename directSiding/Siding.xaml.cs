@@ -59,14 +59,15 @@ namespace directSiding
             }
         }
 
-        private void btnUpdate_Click(object sender, EventArgs e)
+        private void btnRefreshOrStop_Click(object sender, EventArgs e)
         {
             if (_navigating)
             {
                 // Cancel navigation
                 browser.InvokeScript("eval", "document.execCommand('Stop');");
-                // Restore update btn
+                // Restore refresh btn
                 ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.refresh.rest.png", UriKind.Relative);
+                ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).Text = "Actualizar";
             }
             else
             {
@@ -106,9 +107,9 @@ namespace directSiding
 
         private void browser_NavigationFailed(object sender, System.Windows.Navigation.NavigationFailedEventArgs e)
         {
-            var message = "Algo salió mal.\r\nRevisa que tengas conexión a Internet.\r\n";
+            var message = "Algo salió mal.\r\nRevisa que tengas conexión a Internet.\r\nSi usas WP7, asegurate de tener instalado el certificado correspondiente.\r\n";
             if (e.Exception != null)
-                message += e.Exception.StackTrace;
+                message += e.Exception.Message;
             MessageBox.Show(message, "¡Ups!", MessageBoxButton.OK);
         }
 
@@ -124,6 +125,7 @@ namespace directSiding
                     _navigating = false;
                     progressBar.Visibility = System.Windows.Visibility.Collapsed;
                     ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.refresh.rest.png", UriKind.Relative);
+                    ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).Text = "Actualizar";
                     //ApplicationBar.Mode = ApplicationBarMode.Minimized;
                 }
                 catch (SystemException)
@@ -137,6 +139,7 @@ namespace directSiding
         {
             progressBar.Visibility = System.Windows.Visibility.Visible;
             ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.cancel.rest.png", UriKind.Relative);
+            ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).Text = "Detener";
             //ApplicationBar.Mode = ApplicationBarMode.Default;
             _navigating = true;
             _uriToLoad = e.Uri;

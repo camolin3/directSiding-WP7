@@ -10,11 +10,16 @@
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
-    SupportedOrientations="Portrait" Orientation="Portrait"
-    shell:SystemTray.IsVisible="True">
+    SupportedOrientations="Portrait" Orientation="Portrait">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
-    <Grid x:Name="LayoutRoot" Background="Transparent">
+    <Grid x:Name="LayoutRoot">
+    	<Grid.Background>
+    		<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+    			<GradientStop Color="#FFFFEE54" Offset="0.6"/>
+    			<GradientStop Color="#FFFFFA96" Offset="1"/>
+    		</LinearGradientBrush>
+    	</Grid.Background>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -28,26 +33,26 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Image Grid.Column="0" Source="/directSiding;component/Images/icon_24.png" />
-                <TextBlock Grid.Column="1" x:Name="ApplicationTitle" Text="DIRECTSIDING" Style="{StaticResource PhoneTextNormalStyle}" />
+                <TextBlock Grid.Column="1" x:Name="ApplicationTitle" Text="DIRECTSIDING" Style="{StaticResource PhoneTextNormalStyle}" Foreground="Black" />
             </Grid>
-            <TextBlock x:Name="PageTitle" Text="login" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>
+            <TextBlock x:Name="PageTitle" Text="login" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}" Foreground="Black"/>
         </StackPanel>
 
         <!--ContentPanel - place additional content here-->
         <StackPanel x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-            <TextBlock Text="Usuario UC" />
+            <TextBlock Text="Usuario UC" Foreground="Black" />
             <TextBox Name="txtUsername" />
-            <TextBlock Text="Contraseña" />
+            <TextBlock Text="Contraseña" Foreground="Black" />
             <PasswordBox Name="pswPassword" MaxLength="12" />
-            <CheckBox Name="cbCursos" IsChecked="True">Redirigir a Cursos</CheckBox>
+            <CheckBox Name="cbCursos" IsChecked="True" Foreground="Black">Redirigir a Cursos</CheckBox>
             <Button Name="btnLogin" 
                     Content="Entrar"
-                    Click="btn_Click" Height="100" />
+                    Click="btn_Click" Height="100" Foreground="Black" BorderBrush="Black" />
             <HyperlinkButton Name="lnkEgg" 
                              Content="Por Carlos Molina (camolin3@uc.cl)" 
                              Margin="0, 150, 0, 0" 
                              HorizontalAlignment="Center" 
-                             Foreground="Gray"
+                             Foreground="#FF646464"
                              Click="lnkEgg_Click"/>
         </StackPanel>
     </Grid>

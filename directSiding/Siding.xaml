@@ -10,40 +10,45 @@
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait" Orientation="Portrait"
-    mc:Ignorable="d" d:DesignHeight="696" d:DesignWidth="480"
-    shell:SystemTray.IsVisible="True" BackKeyPress="PhoneApplicationPage_BackKeyPress" Loaded="PhoneApplicationPage_Loaded">
+    mc:Ignorable="d" d:DesignHeight="696" d:DesignWidth="480" BackKeyPress="PhoneApplicationPage_BackKeyPress" Loaded="PhoneApplicationPage_Loaded">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
-    <Grid x:Name="LayoutRoot" Background="Transparent">
+    <Grid x:Name="LayoutRoot">
+    	<Grid.Background>
+    		<LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+    			<GradientStop Color="#FFFFEE54" Offset="0.6"/>
+    			<GradientStop Color="#FFFFFA96" Offset="1"/>
+    		</LinearGradientBrush>
+    	</Grid.Background>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <Grid x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,12">
+        <Grid x:Name="TitlePanel" Grid.Row="0" Margin="12,0,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <Image Grid.Column="0" Source="/directSiding;component/Images/icon_24.png" Width="24" Height="24" HorizontalAlignment="Left" />
-            <TextBlock Grid.Column="1" x:Name="ApplicationTitle" Text="DIRECTSIDING" Style="{StaticResource PhoneTextNormalStyle}"/>
+            <TextBlock Grid.Column="1" x:Name="ApplicationTitle" Text="DIRECTSIDING" Style="{StaticResource PhoneTextNormalStyle}" Margin="8" Foreground="Black"/>
             <!--<TextBlock x:Name="PageTitle" Text="inicio" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>-->
         </Grid>
 
-        <ProgressBar Grid.Row="0" Name="progressBar" Visibility="Collapsed" IsIndeterminate="True" Margin="0,-48,0,0" />
+        <ProgressBar Grid.Row="0" Name="progressBar" Visibility="Collapsed" IsIndeterminate="True" />
 
         <!--ContentPanel - place additional content here-->
-        <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
+        <Grid x:Name="ContentPanel" Grid.Row="1">
             <phone:WebBrowser Name="browser" Navigated="browser_Navigated" NavigationFailed="browser_NavigationFailed" Navigating="browser_Navigating" />
         </Grid>
     </Grid>
  
     <!--Sample code showing usage of ApplicationBar-->
     <phone:PhoneApplicationPage.ApplicationBar>
-        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton x:Name="btnUpdate" IconUri="/Images/appbar.refresh.rest.png" Text="Actualizar" Click="btnUpdate_Click"/>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True" Opacity="0.5">
+            <shell:ApplicationBarIconButton x:Name="btnRefreshOrStop" IconUri="/Images/appbar.refresh.rest.png" Text="Actualizar" Click="btnRefreshOrStop_Click"/>
             <shell:ApplicationBarIconButton x:Name="btnConfig" IconUri="/Images/appbar.feature.settings.rest.png" Text="Configurar" Click="btnConfig_Click" />
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
