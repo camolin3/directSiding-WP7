@@ -12,6 +12,8 @@ using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using System.Threading;
 using Microsoft.Phone.Shell;
+using System.ComponentModel;
+using System.IO.IsolatedStorage;
 
 namespace directSiding
 {
@@ -20,25 +22,36 @@ namespace directSiding
         Uri UriLogin = new Uri("https://intrawww.ing.puc.cl/siding/index.phtml", UriKind.Absolute);
         Uri UriCursos = new Uri("https://intrawww.ing.puc.cl/siding/dirdes/ingcursos/cursos/vista.phtml", UriKind.Absolute);
 
-        // Determines how many times you can go back in browser history
-        int _browserHistoryLenght;
-        // The current request is going back in browser history
-        bool _goingBack;
-        // The Uri that is trying to load
-        Uri _uriToLoad;
+        Stack<Uri> _history;
+
+        // The Uri of the current file that is trying to load
+        Uri _fileToDownload;
         // The browser is navigating
         bool _navigating;
+
+        // BackgroundWorker for downloading files in the background
+        private BackgroundWorker _bw;
+        private WebClient _webClient;
+        // Storage
+        IsolatedStorageFile _storage;
 
         public Siding()
         {
             InitializeComponent();
 
             browser.IsScriptEnabled = true;
-            _browserHistoryLenght = -1;
-            _goingBack = false;
+            _history = new Stack<Uri>();
             _navigating = false;
 
-            System.Text.Encoding a = System.Text.Encoding.GetEncoding("iso-8859-1");
+            _bw = new BackgroundWorker();
+            _bw.DoWork += _bw_DoWork;
+            _webClient = new WebClient();
+            
+            _webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(_webClient_DownloadProgressChanged);
+            _webClient.OpenReadCompleted += new OpenReadCompletedEventHandler(_webClient_OpenReadCompleted);
+            _storage = IsolatedStorageFile.GetUserStoreForApplication();
+
+            var encoding = System.Text.Encoding.GetEncoding("iso-8859-1");
             string postData = "login="+ (Application.Current as App).settings["username"]+"&passwd="+ (Application.Current as App).settings["password"]+"&sw=&sh=&cd=";
             string headers = "Content-Type: application/x-www-form-urlencoded\r\n"+
                 "Connection: keep-alive\r\n" +
@@ -46,16 +59,65 @@ namespace directSiding
                 "Accept-Language: es-cl,es;q=0.8,en-us;q=0.5,en;q=0.3\r\n"+
                 "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
             browser.Navigated += new EventHandler<System.Windows.Navigation.NavigationEventArgs>(browser_firstTime);
-            browser.Navigate(UriLogin, a.GetBytes(postData), headers);
+            browser.Navigate(UriLogin, encoding.GetBytes(postData), headers);
+        }
+
+        private void _bw_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var worker = sender as BackgroundWorker;
+            
+            _webClient.OpenReadAsync(_fileToDownload, e.Argument);
+        }
+
+        void _webClient_OpenReadCompleted(object sender, OpenReadCompletedEventArgs e)
+        {
+            try
+            {
+                if (e.Result != null)
+                {
+                    var contentDisposition = (sender as WebClient).ResponseHeaders["Content-Disposition"];
+                    var filename = "filename=\"";
+                    var i = contentDisposition.IndexOf(filename) + filename.Length;
+                    var j = contentDisposition.IndexOf("\"", i);
+                    filename = contentDisposition.Substring(i, j - i);
+                    var f = new IsolatedStorageFileStream(filename, System.IO.FileMode.Create, _storage);
+                    long fileNameLength = (long)e.Result.Length;
+                    byte[] byteImage = new byte[fileNameLength];
+                    e.Result.Read(byteImage, 0, byteImage.Length);
+                    f.Write(byteImage, 0, byteImage.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                //MessageBox.Show(ex.Message);
+            }
+        }
+
+        void _webClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        {
+            try
+            {
+                progressBar.Value = (double)e.ProgressPercentage;
+            }
+            catch (Exception)
+            {
+            }
         }
 
         void browser_firstTime(object sender, System.Windows.Navigation.NavigationEventArgs e)
         {
+            var cookies = browser.GetCookies();
+            var cookiesStr = "";
+            foreach (var cookie in cookies)
+            {
+                cookiesStr = cookie.ToString();
+            }
+            _webClient.Headers[HttpRequestHeader.Cookie] = cookiesStr;
             browser.Navigated -= browser_firstTime;
             if ((bool)(Application.Current as App).settings["redirect"])
             {
+                _history.Pop();
                 browser.Navigate(UriCursos);
-                _browserHistoryLenght--;
             }
         }
 
@@ -64,7 +126,13 @@ namespace directSiding
             if (_navigating)
             {
                 // Cancel navigation
-                browser.InvokeScript("eval", "document.execCommand('Stop');");
+                try
+                {
+                    browser.InvokeScript("eval", "document.execCommand('Stop');");
+                }
+                catch (Exception) { }
+                _navigating = false;
+                progressBar.Visibility = System.Windows.Visibility.Collapsed;
                 // Restore refresh btn
                 ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.refresh.rest.png", UriKind.Relative);
                 ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).Text = "Actualizar";
@@ -72,8 +140,7 @@ namespace directSiding
             else
             {
                 // Reload the Uri
-                browser.Navigate(_uriToLoad);
-                _browserHistoryLenght--;
+                browser.Navigate(_history.Peek());
             }
         }
 
@@ -84,19 +151,16 @@ namespace directSiding
 
         private void PhoneApplicationPage_BackKeyPress(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (_goingBack = _browserHistoryLenght > 0)
+            if (_history.Count > 1)
             {
-                _browserHistoryLenght--;
-                browser.InvokeScript("eval", "history.go(-1)");
-
+                _history.Pop();
+                browser.Navigate(_history.Pop());
                 e.Cancel = true;
             }
         }
 
         private void browser_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
         {
-            if(!_goingBack)
-                _browserHistoryLenght++;
             ThreadPool.QueueUserWorkItem(updateTitle);
         }
 
@@ -137,12 +201,29 @@ namespace directSiding
 
         private void browser_Navigating(object sender, NavigatingEventArgs e)
         {
-            progressBar.Visibility = System.Windows.Visibility.Visible;
-            ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.cancel.rest.png", UriKind.Relative);
-            ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).Text = "Detener";
-            //ApplicationBar.Mode = ApplicationBarMode.Default;
-            _navigating = true;
-            _uriToLoad = e.Uri;
+            if (e.Uri.AbsoluteUri.Contains("id_archivo="))
+            {
+                var uri = e.Uri.AbsoluteUri;
+                var curso = "id_curso_ic=";
+                var i = uri.IndexOf(curso) + curso.Length;
+                var archivo = "&id_archivo=";
+                var j = uri.IndexOf(archivo);
+                var idCurso = uri.Substring(i, j - i);
+                var idArchivo = uri.Substring(j + archivo.Length);
+                _fileToDownload = e.Uri;
+
+                _bw.RunWorkerAsync(String.Format("{0}-{1}", idCurso, idArchivo));
+                e.Cancel = true;
+            }
+            else
+            {
+                _history.Push(e.Uri);
+                _navigating = true;
+                progressBar.Visibility = System.Windows.Visibility.Visible;
+                ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).IconUri = new Uri("/Images/appbar.cancel.rest.png", UriKind.Relative);
+                ((ApplicationBarIconButton)ApplicationBar.Buttons[0]).Text = "Detener";
+                //ApplicationBar.Mode = ApplicationBarMode.Default;
+            }
         }
     }
 }
