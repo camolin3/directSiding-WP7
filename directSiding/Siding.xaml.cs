@@ -22,6 +22,8 @@ namespace directSiding
         Uri UriLogin = new Uri("https://intrawww.ing.puc.cl/siding/index.phtml", UriKind.Absolute);
         Uri UriCursos = new Uri("https://intrawww.ing.puc.cl/siding/dirdes/ingcursos/cursos/vista.phtml", UriKind.Absolute);
 
+        IsolatedStorageSettings settings;
+
         Stack<Uri> _history;
 
         // The Uri of the current file that is trying to load
@@ -39,6 +41,8 @@ namespace directSiding
         {
             InitializeComponent();
 
+            settings = IsolatedStorageSettings.ApplicationSettings;
+
             browser.IsScriptEnabled = true;
             _history = new Stack<Uri>();
             _navigating = false;
@@ -52,7 +56,7 @@ namespace directSiding
             _storage = IsolatedStorageFile.GetUserStoreForApplication();
 
             var encoding = System.Text.Encoding.GetEncoding("iso-8859-1");
-            string postData = "login="+ (Application.Current as App).settings["username"]+"&passwd="+ (Application.Current as App).settings["password"]+"&sw=&sh=&cd=";
+            string postData = "login="+ settings["username"]+"&passwd="+ settings["password"]+"&sw=&sh=&cd=";
             string headers = "Content-Type: application/x-www-form-urlencoded\r\n"+
                 "Connection: keep-alive\r\n" +
                 "Referer: http://www.ing.puc.cl/\r\n"+
@@ -146,7 +150,7 @@ namespace directSiding
 
         private void btnConfig_Click(object sender, EventArgs e)
         {
-            NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("/Config.xaml", UriKind.Relative));
         }
 
         private void PhoneApplicationPage_BackKeyPress(object sender, System.ComponentModel.CancelEventArgs e)

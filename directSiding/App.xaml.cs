@@ -61,6 +61,29 @@ namespace directSiding
                 PhoneApplicationService.Current.UserIdleDetectionMode = IdleDetectionMode.Disabled;
             }
 
+            // Get the UriMapper from the app.xaml resources, and assign it to the root frame
+            UriMapper mapper = Resources["mapper"] as UriMapper;
+            RootFrame.UriMapper = mapper;
+            mapper.UriMappings[0].MappedUri = new Uri("/MainPage.xaml", UriKind.Relative);
+
+            try
+            {
+                settings = IsolatedStorageSettings.ApplicationSettings;
+                
+                // Load default values if they do not exist
+                if (!settings.Contains("autologin"))
+                    settings["autologin"] = true;
+                if (!settings.Contains("redirect"))
+                    settings["redirect"] = true;
+
+                if (settings.Contains("username") && settings.Contains("password"))
+                {
+                    var autologin = (bool)settings["autologin"];
+                    if (autologin)
+                        mapper.UriMappings[0].MappedUri = new Uri("/Siding.xaml", UriKind.Relative);
+                }
+            }
+            catch (Exception) { }
         }
 
         // Code to execute when the application is launching (eg, from Start)

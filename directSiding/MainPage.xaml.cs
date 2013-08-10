@@ -26,13 +26,13 @@ namespace directSiding
             InitializeComponent();
             try
             {
-                settings = (Application.Current as App).settings = IsolatedStorageSettings.ApplicationSettings;
+                settings = IsolatedStorageSettings.ApplicationSettings;
                 if(settings.Contains("username"))
                     txtUsername.Text = (string)settings["username"];
                 if (settings.Contains("password"))
                     pswPassword.Password = (string)settings["password"];
-                if(settings.Contains("redirect"))
-                    cbCursos.IsChecked = (bool)settings["redirect"];
+                cbRedirect.IsChecked = (bool)settings["redirect"];
+                cbAutologin.IsChecked = (bool)settings["autologin"];
             }
             catch (Exception)
             {
@@ -49,7 +49,8 @@ namespace directSiding
             // Save user config
             settings["username"] = txtUsername.Text;
             settings["password"] = pswPassword.Password;
-            settings["redirect"] = cbCursos.IsChecked;
+            settings["redirect"] = cbRedirect.IsChecked;
+            settings["autologin"] = cbAutologin.IsChecked;
 
             NavigationService.Navigate(new Uri("/Siding.xaml", UriKind.Relative));
         }

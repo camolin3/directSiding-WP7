@@ -44,7 +44,8 @@
             <TextBox Name="txtUsername" />
             <TextBlock Text="Contraseña" Foreground="Black" />
             <PasswordBox Name="pswPassword" MaxLength="12" />
-            <CheckBox Name="cbCursos" IsChecked="True" Foreground="Black">Redirigir a Cursos</CheckBox>
+            <CheckBox Name="cbRedirect" IsChecked="True" Foreground="Black">Redirigir a Cursos</CheckBox>
+            <CheckBox Name="cbAutologin" IsChecked="True" Foreground="Black">Acceder automáticamente</CheckBox>
             <Button Name="btnLogin" 
                     Content="Entrar"
                     Click="btn_Click" Height="100" Foreground="Black" BorderBrush="Black" />
