@@ -6,6 +6,7 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:live="clr-namespace:Microsoft.Live.Controls;assembly=Microsoft.Live.Controls"
     mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="768"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
@@ -46,12 +47,30 @@
             <PasswordBox Name="pswPassword" MaxLength="12" />
             <CheckBox Name="cbRedirect" IsChecked="True" Foreground="Black">Redirigir a Cursos</CheckBox>
             <CheckBox Name="cbAutologin" IsChecked="True" Foreground="Black">Acceder automáticamente</CheckBox>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1.5*"/>
+                </Grid.ColumnDefinitions>
+                <live:SignInButton Name="btnSignin" 
+                                   ClientId="0000000044100314" 
+                                   Scopes="wl.basic wl.signin wl.offline_access wl.skydrive_update" 
+                                   Branding="Skydrive" 
+                                   TextType="SignIn"
+                                   Grid.Column="0"
+                                   SessionChanged="btnSignin_SessionChanged" Foreground="Black" BorderBrush="Black" />
+                <TextBlock Name="blockSdkStatus" 
+                           Foreground="Black"
+                           FontSize="22"
+                           TextWrapping="Wrap"
+                           Grid.Column="1" />
+            </Grid>
             <Button Name="btnLogin" 
                     Content="Entrar"
                     Click="btn_Click" Height="100" Foreground="Black" BorderBrush="Black" />
             <HyperlinkButton Name="lnkEgg" 
                              Content="Por Carlos Molina (camolin3@uc.cl)" 
-                             Margin="0, 150, 0, 0" 
+                             Margin="0, 40, 0, 0" 
                              HorizontalAlignment="Center" 
                              Foreground="#FF646464"
                              Click="lnkEgg_Click"/>

@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using System.IO.IsolatedStorage;
 using System.Reflection;
+using Microsoft.Live;
 
 namespace directSiding
 {
@@ -19,6 +20,9 @@ namespace directSiding
     {
         // User settings
         IsolatedStorageSettings settings;
+
+        // User Live account
+        LiveConnectClient client;
 
         // Constructor
         public MainPage()
@@ -71,6 +75,32 @@ namespace directSiding
             {
                 settings["clippy-js"] = "Clippy";
             }
+        }
+
+        private void btnSignin_SessionChanged(object sender, Microsoft.Live.Controls.LiveConnectSessionChangedEventArgs e)
+        {
+            if (e != null && e.Status == LiveConnectSessionStatus.Connected)
+            {
+                client = new LiveConnectClient(e.Session);
+                client.GetCompleted += client_GetCompleted;
+                client.GetAsync("me");
+            }
+            else
+            {
+                blockSdkStatus.Text = "Inicie sesión en Skydrive para descargar archivos";
+            }
+        }
+
+        void client_GetCompleted(object sender, LiveOperationCompletedEventArgs e)
+        {
+            if (e.Error == null)
+            {
+                string firstName = e.Result.ContainsKey("first_name") ? e.Result["first_name"] as string : string.Empty;
+                string lastName = e.Result.ContainsKey("last_name") ? e.Result["last_name"] as string : string.Empty;
+                blockSdkStatus.Text = String.Format("{0} {1}, ya puedes descargar archivos", firstName, lastName);
+            }
+            else
+                blockSdkStatus.Text = e.Error.Message;
         }
     }
 }
