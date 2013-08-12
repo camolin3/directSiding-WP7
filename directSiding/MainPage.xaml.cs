@@ -21,9 +21,6 @@ namespace directSiding
         // User settings
         IsolatedStorageSettings settings;
 
-        // User Live account
-        LiveConnectClient client;
-
         // Constructor
         public MainPage()
         {
@@ -81,8 +78,9 @@ namespace directSiding
         {
             if (e != null && e.Status == LiveConnectSessionStatus.Connected)
             {
-                client = new LiveConnectClient(e.Session);
-                client.GetCompleted += client_GetCompleted;
+                App.Session = e.Session;
+                var client = new LiveConnectClient(App.Session);
+                client.GetCompleted += client_Login;
                 client.GetAsync("me");
             }
             else
@@ -91,7 +89,7 @@ namespace directSiding
             }
         }
 
-        void client_GetCompleted(object sender, LiveOperationCompletedEventArgs e)
+        void client_Login(object sender, LiveOperationCompletedEventArgs e)
         {
             if (e.Error == null)
             {

@@ -14,15 +14,20 @@ using System.Threading;
 using Microsoft.Phone.Shell;
 using System.ComponentModel;
 using System.IO.IsolatedStorage;
+using Microsoft.Live;
 
 namespace directSiding
 {
     public partial class Siding : PhoneApplicationPage
     {
-        Uri UriLogin = new Uri("https://intrawww.ing.puc.cl/siding/index.phtml", UriKind.Absolute);
-        Uri UriCursos = new Uri("https://intrawww.ing.puc.cl/siding/dirdes/ingcursos/cursos/vista.phtml", UriKind.Absolute);
+        Uri _uriLogin = new Uri("https://intrawww.ing.puc.cl/siding/index.phtml", UriKind.Absolute);
+        Uri _uriCursos = new Uri("https://intrawww.ing.puc.cl/siding/dirdes/ingcursos/cursos/vista.phtml", UriKind.Absolute);
+        string _skyDriveFolderName = "directSIDING";
+        string _skyDriveFolderID = string.Empty;
 
         IsolatedStorageSettings settings;
+        LiveConnectClient client;
+        string filename;
 
         Stack<Uri> _history;
 
@@ -34,8 +39,6 @@ namespace directSiding
         // BackgroundWorker for downloading files in the background
         private BackgroundWorker _bw;
         private WebClient _webClient;
-        // Storage
-        IsolatedStorageFile _storage;
 
         public Siding()
         {
@@ -53,7 +56,6 @@ namespace directSiding
             
             _webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(_webClient_DownloadProgressChanged);
             _webClient.OpenReadCompleted += new OpenReadCompletedEventHandler(_webClient_OpenReadCompleted);
-            _storage = IsolatedStorageFile.GetUserStoreForApplication();
 
             var encoding = System.Text.Encoding.GetEncoding("iso-8859-1");
             string postData = "login="+ settings["username"]+"&passwd="+ settings["password"]+"&sw=&sh=&cd=";
@@ -63,13 +65,18 @@ namespace directSiding
                 "Accept-Language: es-cl,es;q=0.8,en-us;q=0.5,en;q=0.3\r\n"+
                 "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
             browser.Navigated += new EventHandler<System.Windows.Navigation.NavigationEventArgs>(browser_firstTime);
-            browser.Navigate(UriLogin, encoding.GetBytes(postData), headers);
+            browser.Navigate(_uriLogin, encoding.GetBytes(postData), headers);
         }
 
         private void _bw_DoWork(object sender, DoWorkEventArgs e)
         {
             var worker = sender as BackgroundWorker;
-            
+
+            Dispatcher.BeginInvoke(() => 
+            {
+                progressBar.Visibility = System.Windows.Visibility.Visible;
+                ApplicationTitle.Text = "Descargando...";
+            });
             _webClient.OpenReadAsync(_fileToDownload, e.Argument);
         }
 
@@ -79,21 +86,120 @@ namespace directSiding
             {
                 if (e.Result != null)
                 {
+                    // Download file
                     var contentDisposition = (sender as WebClient).ResponseHeaders["Content-Disposition"];
-                    var filename = "filename=\"";
+                    filename = "filename=\"";
                     var i = contentDisposition.IndexOf(filename) + filename.Length;
                     var j = contentDisposition.IndexOf("\"", i);
-                    filename = contentDisposition.Substring(i, j - i);
-                    var f = new IsolatedStorageFileStream(filename, System.IO.FileMode.Create, _storage);
-                    long fileNameLength = (long)e.Result.Length;
-                    byte[] byteImage = new byte[fileNameLength];
-                    e.Result.Read(byteImage, 0, byteImage.Length);
-                    f.Write(byteImage, 0, byteImage.Length);
+                    filename = "/shared/transfers/" + contentDisposition.Substring(i, j - i);
+                    using (var storage = IsolatedStorageFile.GetUserStoreForApplication())
+                    using (var f = new IsolatedStorageFileStream(filename, System.IO.FileMode.Create, storage))
+                    {
+                        long fileNameLength = (long)e.Result.Length;
+                        byte[] byteImage = new byte[fileNameLength];
+                        e.Result.Read(byteImage, 0, byteImage.Length);
+                        f.Write(byteImage, 0, byteImage.Length);
+                    }
+
+                    // Check if the folder exists
+                    client = new LiveConnectClient(App.Session);
+                    client.GetCompleted += client_GetFolderInfoCompleted;
+                    client.GetAsync("me/skydrive/files?filter=folders,albums");
                 }
             }
-            catch (Exception ex)
+            catch (Exception) { }
+        }
+
+        private void client_GetFolderInfoCompleted(object sender, LiveOperationCompletedEventArgs e)
+        {
+            if (e.Error == null)
             {
-                //MessageBox.Show(ex.Message);
+                var folders = e.Result["data"] as List<object>;
+
+                foreach (IDictionary<string, object> folder in folders)
+                {
+                    if (folder["name"].ToString() == _skyDriveFolderName)
+                    {
+                        _skyDriveFolderID = folder["id"].ToString();
+                        break;
+                    }
+                }
+
+                if (_skyDriveFolderID == string.Empty)
+                {
+                    var skyDriveFolderData = new Dictionary<string, object>();
+                    skyDriveFolderData.Add("name", _skyDriveFolderName);
+                    client.PostCompleted += client_CreateFolderCompleted;
+                    client.PostAsync("me/skydrive", skyDriveFolderData);
+                }
+                else
+                    uploadFile();
+            }
+            else
+            {
+                MessageBox.Show(e.Error.Message);
+            } 
+        }
+
+        private void client_CreateFolderCompleted(object sender, LiveOperationCompletedEventArgs e)
+        {
+            if (e.Error == null)
+            {
+                var folder = e.Result;
+                _skyDriveFolderID = folder["id"].ToString();
+                uploadFile();
+            }
+            else
+            {
+                MessageBox.Show(e.Error.Message, "No pudimos usar Skydrive :(", MessageBoxButton.OK);
+            } 
+        }
+
+        private void uploadFile()
+        {
+            if (String.IsNullOrEmpty(_skyDriveFolderID))
+                return;
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                ApplicationTitle.Text = "Subiendo a Skydrive...";
+            });
+
+            this.client.BackgroundUploadCompleted += client_BackgroundUploadCompleted;
+
+            // Upload file
+            try
+            {
+                client.BackgroundUploadAsync(_skyDriveFolderID, new Uri(filename, UriKind.Relative), OverwriteOption.Overwrite);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        void client_BackgroundUploadCompleted(object sender, LiveOperationCompletedEventArgs e)
+        {
+            if (e.Error == null)
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    progressBar.Visibility = System.Windows.Visibility.Collapsed;
+                    ApplicationTitle.Text = "Listo :)";
+                });
+
+                // Remove the file from the IS
+                using (var storage = IsolatedStorageFile.GetUserStoreForApplication())
+                {
+                    storage.DeleteFile(filename);
+                }
+
+                ThreadPool.QueueUserWorkItem(updateTitle);
+
+                var file = e.Result;
+                var browser = new Microsoft.Phone.Tasks.WebBrowserTask();
+                browser.Uri = new Uri(file["source"] as string, UriKind.Absolute);
+                browser.Show();
             }
         }
 
@@ -121,7 +227,7 @@ namespace directSiding
             if ((bool)(Application.Current as App).settings["redirect"])
             {
                 _history.Pop();
-                browser.Navigate(UriCursos);
+                browser.Navigate(_uriCursos);
             }
         }
 
@@ -216,7 +322,16 @@ namespace directSiding
                 var idArchivo = uri.Substring(j + archivo.Length);
                 _fileToDownload = e.Uri;
 
-                _bw.RunWorkerAsync(String.Format("{0}-{1}", idCurso, idArchivo));
+                if (App.Session != null)
+                {
+                    _bw.RunWorkerAsync(String.Format("{0}-{1}", idCurso, idArchivo));
+                }
+                else
+                {
+                    var res = MessageBox.Show("Requieres iniciar sesión en Skydrive. Ve a la página de configuración", "No puedes descargar archivos", MessageBoxButton.OKCancel);
+                    if(res == MessageBoxResult.OK)
+                        NavigationService.Navigate(new Uri("/Config.xaml", UriKind.Relative));
+                }
                 e.Cancel = true;
             }
             else

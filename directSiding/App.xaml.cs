@@ -13,6 +13,7 @@ using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using System.IO.IsolatedStorage;
+using Microsoft.Live;
 
 namespace directSiding
 {
@@ -26,6 +27,9 @@ namespace directSiding
         /// </summary>
         /// <returns>The root frame of the Phone Application.</returns>
         public PhoneApplicationFrame RootFrame { get; private set; }
+
+        // Skydrive user session
+        public static LiveConnectSession Session { get; set; }
 
         /// <summary>
         /// Constructor for the Application object.
