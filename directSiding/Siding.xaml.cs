@@ -281,10 +281,48 @@ namespace directSiding
 
         private void browser_NavigationFailed(object sender, System.Windows.Navigation.NavigationFailedEventArgs e)
         {
-            var message = "Algo salió mal.\r\nRevisa que tengas conexión a Internet.\r\nSi usas WP7, asegurate de tener instalado el certificado correspondiente.\r\n";
-            if (e.Exception != null)
-                message += e.Exception.Message;
-            MessageBox.Show(message, "¡Ups!", MessageBoxButton.OK);
+            var g = new Microsoft.Xna.Framework.Game();
+            var title = "Ups!";
+            var message = "Algo salió mal.\r\n¿Estás seguro tienes conexión a Internet?";
+            var ans = MessageBox.Show(message, title, MessageBoxButton.OKCancel);
+            if (ans == MessageBoxResult.OK)
+            {
+                title = "¿Quieres instalar el certificado en tu teléfono?";
+                message = "El SIDING tiene problemas con el certificado de seguridad.\r\n" +
+                    "Si no has seguido las instrucciones, pon Ok para que te expliquemos qué debes hacer.\r\n\r\n" +
+                    "Si ya hiciste el trámite pon cancelar e intenta más tarde. Saldrás de la app.";
+                ans = MessageBox.Show(message, title, MessageBoxButton.OKCancel);
+                if (ans != MessageBoxResult.OK)
+                    g.Exit();
+                else
+                {
+                    title = "Instrucciones 1/2";
+                    message = "1. Desde un computador baja el archivo http://bit.ly/dsCertf\r\n" +
+                        "2. Adjunta el archivo y envíalo por email a la cuenta que tienes configurada en la app Mail de tu equipo Windows Phone.\r\n\r\n" +
+                        "Cuando estes listo pon Ok para seguir con los pasos.";
+                    ans = MessageBox.Show(message, title, MessageBoxButton.OK);
+
+                    if (ans != MessageBoxResult.OK)
+                        g.Exit();
+
+                    title = "Instrucciones 2/2";
+                    message = "1. Desde tu smartphone ve a la app Mail y revisa el correo que te acabas de enviar.\r\n" +
+                        "2. Descarga el archivo adjunto .pem haciendo tap en el nombre.\r\n" +
+                        "3. Abre el archivo adjunto. Si todo va bien debe aparecer un \"escudo\" de ícono.\r\n" +
+                        "4. Acepta instalar el certificado de seguridad.\r\n\r\n" +
+                        "Una vez hecho todo esto, reinicia directSiding. Tap Ok para salir.";
+                    MessageBox.Show(message, title, MessageBoxButton.OK);
+                    g.Exit();
+                }
+            }
+            else
+            {
+                title = "¡Conéctate a Internet antes!";
+                message = "Es necesario que actives tu conexión de datos o Wi-Fi para continuar.\r\n" +
+                    "Tap Ok para salir";
+                MessageBox.Show(message, title, MessageBoxButton.OK);
+                g.Exit();
+            }
         }
 
         private void updateTitle(Object o)
